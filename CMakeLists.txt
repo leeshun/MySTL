@@ -7,4 +7,4 @@ add_executable(DataStructure
         iterator.h
         main.cpp
         memory.h
-        rb_tree.h sequence.h single_list.h type_base.h stack.h)
+        rb_tree.h sequence.h single_list.h type_base.h stack.h queue.h heap.h)

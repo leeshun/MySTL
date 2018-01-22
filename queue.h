@@ -2,8 +2,8 @@
  * Created by Maou Lim on 2018/1/22.
  */
 
-#ifndef _STACK_H_
-#define _STACK_H_
+#ifndef _QUEUE_H_
+#define _QUEUE_H_
 
 #include <utility>
 
@@ -16,7 +16,7 @@ namespace tools {
 	class sequence;
 
 	template <typename _Val, typename _Container = sequence<_Val>>
-	class stack {
+	class queue {
 	public:
 		typedef _Val        value_type;
 		typedef _Val*       pointer;
@@ -27,7 +27,7 @@ namespace tools {
 		typedef typename _Container::size_type size_type;
 
 	protected:
-		typedef stack<_Val, _Container> self_type;
+		typedef queue<_Val, _Container> self_type;
 		typedef _Container              container_type;
 
 	private:
@@ -38,10 +38,13 @@ namespace tools {
 		size_type size() const { return m_container.size(); }
 		size_type max_size() const { return m_container.max_size(); }
 
-		const_reference top() const { return m_container.back(); }
-		reference top() { return const_cast<reference>(((const self_type*) this)->top()); }
+		const_reference back() const { return m_container.back(); }
+		reference back() { return const_cast<reference>(((const self_type*) this)->back()); }
 
-		void pop() { m_container.pop_back(); }
+		const_reference front() const { return m_container.front(); }
+		reference front() { return const_cast<reference>(((const self_type*) this)->front()); }
+
+		void pop() { m_container.pop_front(); }
 		void push(const value_type& val) { return m_container.push_back(val); }
 
 		template <typename... _Args>
@@ -49,4 +52,4 @@ namespace tools {
 	};
 }
 
-#endif //_STACK_H_
+#endif //_QUEUE_H_
