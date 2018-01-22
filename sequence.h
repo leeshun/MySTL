@@ -136,6 +136,20 @@ namespace tools {
 			}
 		}
 
+		template <typename... _Args>
+		pointer _emplace(difference_type offset, _Args&&... args) {
+			if (_full()) {
+				_extend_when_full();
+			}
+
+			pointer p = m_base + offset;
+			_copy_backward(p, m_end, p + 1);
+			construct(p, std::forward<_Args>(args)...);
+			++m_end;
+
+			return p;
+		}
+
 	public:
 		sequence() : m_base(nullptr), m_end(nullptr), m_finish(nullptr) { }
 
@@ -208,25 +222,27 @@ namespace tools {
 
 		void resize(size_type new_size) { _resize(new_size); }
 
+		template <typename... _Args>
+		iterator emplace(const_reference pos, _Args&&... args) {
+			return iterator(_emplace(pos - begin(), std::forward<_Args>(args)...));
+		}
+
+		template <typename... _Args>
+		void emplace_back(_Args&&... args) {
+			_emplace(end() - begin(), std::forward<_Args>(args)...);
+		}
+
 		void push_back(const value_type& val) { insert(end(), val); }
 
 		void pop_back() { erase(--end()); }
 
-		void insert(const_iterator pos, const value_type& val) {
-			difference_type offset = pos - begin();
-			if (_full()) {
-				_extend_when_full();
-			}
-
-			pointer p = m_base + offset;
-			_copy_backward(p, m_end, p + 1);
-			construct(p, val);
-			++m_end;
+		iterator insert(const_iterator pos, const value_type& val) {
+			return iterator(_emplace(pos - begin(), val));
 		}
 
 		iterator erase(const_iterator pos) {
 			if (empty() || end() == pos) {
-				return std::overflow_error("Invalid iterator or empty sequence.");
+				throw std::overflow_error("Invalid iterator or empty sequence.");
 			}
 
 			difference_type offset = pos - begin();

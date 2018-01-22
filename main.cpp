@@ -2,23 +2,24 @@
 #include "rb_tree.h"
 #include "sequence.h"
 #include "single_list.h"
+#include "stack.h"
 
 #include <random>
 #include <ctime>
 
-//struct A {
-//	int    a;
-//	double b;
-//	char   c;
-//
-//	A() { std::cout << "construct" << std::endl; }
-//
-//	A(int a, double b, char c) : a(a), b(b), c(c) {
-//		std::cout << "construct" << std::endl;
-//	}
-//
-//	~A() { std::cout << "destruct" << std::endl; }
-//};
+struct A {
+	int    a;
+	double b;
+	char   c;
+
+	A() { std::cout << "construct" << std::endl; }
+
+	A(int a, double b, char c) : a(a), b(b), c(c) {
+		std::cout << "construct" << std::endl;
+	}
+
+	~A() { std::cout << "destruct" << std::endl; }
+};
 //
 //struct indict_to {
 //
@@ -78,25 +79,33 @@ int main() {
 //		std::cout << *iter << " ";
 //	}
 
-	tools::single_list<int> list;
+//	tools::single_list<int> list;
+//
+//	std::cout << "empty: " << list.empty() << std::endl;
+//
+//	for (int i = 0; i < 10; ++i) {
+//		list.push_front(i);
+//		list.push_back(20 - i);
+//	}
+//
+//	while (!list.empty()) {
+//		list.pop_front();
+//	}
+//
+//	std::cout << "empty: " << list.empty() << std::endl;
+//	std::cout << "size : " << list.size() << std::endl;
+//
+//	for (auto iter = list.begin(); list.end() != iter; ++iter) {
+//		std::cout << *iter << " ";
+//	}
 
-	std::cout << "empty: " << list.empty() << std::endl;
+	tools::stack<A, tools::sequence<A>> stack;
 
-	for (int i = 0; i < 10; ++i) {
-		list.push_front(i);
-		list.push_back(20 - i);
-	}
+	std::cout << stack.empty() << std::endl;
 
-	while (!list.empty()) {
-		list.pop_front();
-	}
+	stack.emplace(1, 2.0, 'a');
 
-	std::cout << "empty: " << list.empty() << std::endl;
-	std::cout << "size : " << list.size() << std::endl;
-
-	for (auto iter = list.begin(); list.end() != iter; ++iter) {
-		std::cout << *iter << " ";
-	}
+	std::cout << stack.empty() << std::endl;
 
 	return 0;
 }

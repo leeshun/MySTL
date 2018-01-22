@@ -16,14 +16,14 @@ namespace tools {
 	}
 
 	template <typename _T, typename... _Args>
-	inline void construct(_T* ptr, _Args... args) {
+	inline void construct(_T* ptr, _Args&&... args) {
 		new (ptr) _T(std::forward<_Args>(args)...);
 	};
 
 	template <typename _InputIterator, typename... _Args>
 	inline void construct(_InputIterator first,
 	                      _InputIterator last,
-	                      _Args...       args) {
+	                      _Args&&...     args) {
 		while (first != last) {
 			construct(&(*first), std::forward<_Args>(args)...);
 			++first;
