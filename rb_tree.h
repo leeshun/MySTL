@@ -7,6 +7,7 @@
 
 #include <cassert>
 
+#include "functor.h"
 #include "iterator.h"
 #include "memory.h"
 
@@ -327,8 +328,8 @@ namespace tools {
 		typename _Key,
 		typename _Val,
 		typename _KeyOf,
-		typename _Comparator,
-		typename _Allocator = std::allocator<rb_tree_node<_Val>>
+		typename _Comparator = less<_Key>,
+		typename _Allocator  = std::allocator<rb_tree_node<_Val>>
 	>
 	class rb_tree {
 	public:

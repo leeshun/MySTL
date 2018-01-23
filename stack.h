@@ -18,13 +18,13 @@ namespace tools {
 	template <typename _Val, typename _Container = sequence<_Val>>
 	class stack {
 	public:
-		typedef _Val        value_type;
-		typedef _Val*       pointer;
-		typedef const _Val* const_pointer;
-		typedef _Val&       reference;
-		typedef const _Val& const_reference;
+		typedef typename _Container::value_type      value_type;
+		typedef typename _Container::pointer         pointer;
+		typedef typename _Container::const_pointer   const_pointer;
+		typedef typename _Container::reference       reference;
+		typedef typename _Container::const_reference const_reference;
 
-		typedef typename _Container::size_type size_type;
+		typedef typename _Container::size_type       size_type;
 
 	protected:
 		typedef stack<_Val, _Container> self_type;
