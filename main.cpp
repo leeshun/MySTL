@@ -5,6 +5,7 @@
 #include "stack.h"
 #include "heap.h"
 
+#include <algorithm>
 #include <random>
 #include <ctime>
 
@@ -110,22 +111,31 @@ int main() {
 
 	int arr[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-//	tools::sequence<int> seq(arr, arr + 10);
-//
-//	for (auto& each : seq) {
-//		std::cout << each << " ";
-//	}
+	tools::sequence<int> seq(arr, arr + 10);
 
-	tools::priority_queue<int> queue(arr, arr + 10);
-	std::cout << queue.empty() << " " << queue.top() << std::endl;
-
-	queue.push(15);
-	queue.push(18);
-
-	while (!queue.empty()) {
-		std::cout << queue.top() << std::endl;
-		queue.pop();
+	for (auto iter = seq.rbegin(); seq.rend() != iter; ++iter) {
+		std::cout << *iter << " ";
 	}
+
+
+//	std::vector<int> vec(arr, arr + 10);
+//	std::sort(vec.rbegin(), vec.rend());
+//
+//	std::vector<int>::const_iterator it = vec.begin();
+//	std::vector<int>::iterator other_it = it;
+
+	//for (auto iter = vec.rbegin(); iter != vec.begin(); )
+
+//	tools::priority_queue<int> queue(arr, arr + 10);
+//	std::cout << queue.empty() << " " << queue.top() << std::endl;
+//
+//	queue.push(15);
+//	queue.push(18);
+//
+//	while (!queue.empty()) {
+//		std::cout << queue.top() << std::endl;
+//		queue.pop();
+//	}
 
 	return 0;
 }

@@ -385,11 +385,14 @@ namespace tools {
 
 	protected:
 		typedef rb_tree_iterator<value_type>       inner_iterator;
-		typedef rb_tree_const_iterator<value_type> inner_const_iterator;
+		typedef rb_tree_const_iterator<value_type> const_inner_iterator;
 
 	public:
 		typedef _iterator_wrapper<inner_iterator, self_type>       iterator;
-		typedef _iterator_wrapper<inner_const_iterator, self_type> const_iterator;
+		typedef _iterator_wrapper<const_inner_iterator, self_type> const_iterator;
+
+		typedef _reverse_iterator<iterator>       reverse_iterator;
+		typedef _reverse_iterator<const_iterator> const_reverse_iterator;
 
 	private:
 		void _initialize() {
@@ -457,11 +460,17 @@ namespace tools {
 	public:
 		const comparator_type& comparator() const { return m_comp; }
 
-		iterator begin() { return iterator(inner_iterator(leftmost())); }
-		const_iterator begin() const { return const_iterator(inner_const_iterator(leftmost())); }
+		iterator begin() { return inner_iterator(leftmost()); }
+		const_iterator begin() const { return const_inner_iterator(leftmost()); }
 
-		iterator end() { return iterator(inner_iterator(m_header)); }
-		const_iterator end() const { return const_iterator(inner_const_iterator(m_header)); }
+		iterator end() { return inner_iterator(m_header); }
+		const_iterator end() const { return const_inner_iterator(m_header); }
+
+		reverse_iterator rbegin() { return end(); }
+		const_reverse_iterator rbegin() const { return end(); }
+
+		reverse_iterator rend() { return begin(); }
+		const_reverse_iterator rend() const { return begin(); }
 
 		bool empty() const { return 0 == m_count_node; }
 		size_type size() const { return m_count_node; }
@@ -472,7 +481,7 @@ namespace tools {
 				return end();
 			}
 
-			return inner_const_iterator(
+			return const_inner_iterator(
 				(link_type) rb_tree_node_base::maximum(root())
 			);
 		}
@@ -481,7 +490,7 @@ namespace tools {
 			if (empty()) {
 				return end();
 			}
-			return inner_const_iterator(
+			return const_inner_iterator(
 				(link_type) rb_tree_node_base::minimum(root())
 			);
 		}

@@ -32,10 +32,13 @@ namespace tools {
 		typedef sequence<_Val, _Allocator>       self_type;
 		typedef standard_alloc<_Val, _Allocator> allocator_type;
 
+		typedef pointer       inner_iterator;
+		typedef const_pointer const_inner_iterator;
+
 	private:
-		pointer m_base;
-		pointer m_end;
-		pointer m_finish;
+		inner_iterator m_base;
+		inner_iterator m_end;
+		inner_iterator m_finish;
 
 	protected:
 		pointer get_space(size_type n) { return allocator_type::allocate(n); }
@@ -66,9 +69,9 @@ namespace tools {
 		}
 
 		void _extend(size_type new_size) {
-			pointer old_base = m_base;
-			pointer old_end  = m_end;
-			pointer old_finish = m_finish;
+			inner_iterator old_base = m_base;
+			inner_iterator old_end  = m_end;
+			inner_iterator old_finish = m_finish;
 
 			try {
 				_initialize_with_n(new_size);
@@ -109,7 +112,7 @@ namespace tools {
 		void _swap() { /* todo */ }
 
 		void _destroy() {
-			pointer cursor = m_base;
+			inner_iterator cursor = m_base;
 			while (m_end != cursor) {
 				destroy(cursor);
 				++cursor;
@@ -120,9 +123,11 @@ namespace tools {
 		bool _full() const { return m_end == m_finish; }
 
 		/* [start, end) */
-		void _copy_backward(pointer start, pointer end, pointer new_start) {
+		void _copy_backward(inner_iterator start    ,
+		                    inner_iterator end      ,
+		                    inner_iterator new_start) {
 			difference_type offset = new_start - start;
-			pointer p = end + offset - 1;
+			inner_iterator p = end + offset - 1;
 
 			while (new_start <= p) {
 				memcpy(p, p - offset, sizeof (value_type));
@@ -130,19 +135,19 @@ namespace tools {
 			}
 		}
 
-		void _copy_forward(pointer start, pointer end, pointer new_start) {
+		void _copy_forward(inner_iterator start, inner_iterator end, inner_iterator new_start) {
 			while (start != end) {
 				memcpy(new_start++, start++, sizeof (value_type));
 			}
 		}
 
 		template <typename... _Args>
-		pointer _emplace(difference_type offset, _Args&&... args) {
+		inner_iterator _emplace(difference_type offset, _Args&&... args) {
 			if (_full()) {
 				_extend_when_full();
 			}
 
-			pointer p = m_base + offset;
+			inner_iterator p = m_base + offset;
 			_copy_backward(p, m_end, p + 1);
 			construct(p, std::forward<_Args>(args)...);
 			++m_end;
@@ -198,8 +203,11 @@ namespace tools {
 		}
 
 	public:
-		typedef _iterator_wrapper<pointer, self_type>       iterator;
-		typedef _iterator_wrapper<const_pointer, self_type> const_iterator;
+		typedef _iterator_wrapper<inner_iterator, self_type>       iterator;
+		typedef _iterator_wrapper<const_inner_iterator, self_type> const_iterator;
+
+		typedef _reverse_iterator<iterator>       reverse_iterator;
+		typedef _reverse_iterator<const_iterator> const_reverse_iterator;
 
 	public:
 		bool empty() const { return m_base == m_end; }
@@ -247,7 +255,7 @@ namespace tools {
 			}
 
 			difference_type offset = pos - begin();
-			pointer to_erase = m_base + offset;
+			inner_iterator to_erase = m_base + offset;
 
 			destroy(to_erase);
 			_copy_forward(to_erase + 1, m_end, to_erase);
@@ -262,6 +270,11 @@ namespace tools {
 		iterator end() { return iterator(m_end); }
 		const_iterator end() const { return const_iterator(m_end); }
 
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 	};
 }
 

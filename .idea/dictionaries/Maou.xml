@@ -2,6 +2,7 @@
   <dictionary name="Maou">
     <words>
       <w>emplace</w>
+      <w>rbegin</w>
       <w>slist</w>
     </words>
   </dictionary>

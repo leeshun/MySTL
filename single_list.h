@@ -224,10 +224,13 @@ namespace tools {
 
 	protected:
 		typedef slist_iterator<value_type>       inner_iterator;
-		typedef slist_const_iterator<value_type> inner_const_iterator;
+		typedef slist_const_iterator<value_type> const_inner_iterator;
 	public:
 		typedef _iterator_wrapper<inner_iterator, self_type>       iterator;
-		typedef _iterator_wrapper<inner_const_iterator, self_type> const_iterator;
+		typedef _iterator_wrapper<const_inner_iterator, self_type> const_iterator;
+
+		typedef _reverse_iterator<iterator>       reverse_iterator;
+		typedef _reverse_iterator<const_iterator> const_reverse_iterator;
 
 	public:
 		bool empty() const { return head() == m_before_head; }
@@ -298,11 +301,16 @@ namespace tools {
 		void push_back(const value_type& val) { tail() = _insert_after(tail(), val); }
 
 		iterator begin() { return inner_iterator(head()); }
-		const_iterator begin() const { return inner_const_iterator(head()); }
+		const_iterator begin() const { return const_inner_iterator(head()); }
 
 		iterator end() { return inner_iterator(m_before_head); }
-		const_iterator end() const { return inner_const_iterator(m_before_head); }
+		const_iterator end() const { return const_inner_iterator(m_before_head); }
 
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 	};
 
 }
