@@ -163,7 +163,8 @@ namespace tools {
 		}
 
 		template <typename _InputIterator>
-		sequence(_InputIterator first, _InputIterator last) {
+		sequence(_InputIterator first, _InputIterator last) :
+			m_base(nullptr), m_end(nullptr), m_finish(nullptr) {
 			while (first != last) {
 				this->push_back(*first);
 				++first;

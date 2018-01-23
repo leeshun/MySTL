@@ -3,6 +3,7 @@
 #include "sequence.h"
 #include "single_list.h"
 #include "stack.h"
+#include "heap.h"
 
 #include <random>
 #include <ctime>
@@ -99,13 +100,32 @@ int main() {
 //		std::cout << *iter << " ";
 //	}
 
-	tools::stack<A, tools::sequence<A>> stack;
+//	tools::stack<A, tools::sequence<A>> stack;
+//
+//	std::cout << stack.empty() << std::endl;
+//
+//	stack.emplace(1, 2.0, 'a');
+//
+//	std::cout << stack.empty() << std::endl;
 
-	std::cout << stack.empty() << std::endl;
+	int arr[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-	stack.emplace(1, 2.0, 'a');
+//	tools::sequence<int> seq(arr, arr + 10);
+//
+//	for (auto& each : seq) {
+//		std::cout << each << " ";
+//	}
 
-	std::cout << stack.empty() << std::endl;
+	tools::priority_queue<int> queue(arr, arr + 10);
+	std::cout << queue.empty() << " " << queue.top() << std::endl;
+
+	queue.push(15);
+	queue.push(18);
+
+	while (!queue.empty()) {
+		std::cout << queue.top() << std::endl;
+		queue.pop();
+	}
 
 	return 0;
 }

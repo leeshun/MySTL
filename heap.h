@@ -14,7 +14,11 @@ namespace tools {
 	inline void _push_heap(_RandomAccessIterator first,
 	                       _RandomAccessIterator last ,
 	                       _Comparator           comp ) {
-		_push_heap(first, last - first - 1, 0, *(last - 1), comp);
+		typedef typename
+			_iterator_traits<_RandomAccessIterator>::difference_type
+		difference_type;
+
+		_push_heap(first, last - first - 1, difference_type(0), *(last - 1), comp);
 	}
 
 	template <
@@ -49,7 +53,7 @@ namespace tools {
 	template <
 		typename _RandomAccessIterator,
 		typename _ValueType,
-		typename _Comparator,
+		typename _Comparator
 	>
 	inline void _pop_heap(_RandomAccessIterator first ,
 	                      _RandomAccessIterator last  ,
@@ -161,7 +165,6 @@ namespace tools {
 		comparator_type m_comp;
 
 	public:
-		priority_queue() = default;
 		explicit priority_queue(const comparator_type& comp = _Comparator()) : m_comp(comp) { }
 
 		template <typename _InputIterator>
