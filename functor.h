@@ -21,7 +21,12 @@ namespace tools {
 		}
 	};
 
+	/* mappings */
 
+	template <typename _Tp>
+	struct self {
+		const _Tp& operator()(const _Tp& val) const { return val; }
+	};
 
 }
 

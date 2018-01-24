@@ -1,8 +1,11 @@
 <component name="ProjectDictionaryState">
   <dictionary name="Maou">
     <words>
+      <w>bitree</w>
+      <w>bstree</w>
       <w>emplace</w>
       <w>rbegin</w>
+      <w>rebalance</w>
       <w>slist</w>
     </words>
   </dictionary>

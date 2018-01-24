@@ -22,41 +22,25 @@ struct A {
 
 	~A() { std::cout << "destruct" << std::endl; }
 };
-//
-//struct indict_to {
-//
-//	int operator()(int key) const {
-//		return key;
-//	}
-//};
-//
-//struct less {
-//
-//	bool operator()(int a, int b) const {
-//		return a < b;
-//	}
-//};
 
 int main() {
 
 	std::mt19937 rand_engine((unsigned int) time(nullptr));
 	std::uniform_int_distribution<int> rand_int(-100, 100);
 
-//	tools::rb_tree<int, int, indict_to, less> tree;
-//
-//	tree.insert_equal(1);
-//	tree.insert_equal(2);
-//	tree.insert_equal(5);
-//	tree.insert_equal(-3);
-//	tree.insert_equal(-2);
-//
-//	std::vector<int> vec;
-//
-//	vec.begin() == vec.end();
-//
-//	for (auto i = tree.begin(); tree.end() != i; i++) {
-//		std::cout << *i << " ";
-//	}
+	tools::_rb_tree<int, int, tools::self<int>, tools::less<int>> tree;
+
+	tree.insert_equal(1);
+	tree.insert_equal(2);
+	tree.insert_equal(5);
+	tree.insert_equal(-3);
+	tree.insert_equal(-2);
+
+	tree.insert_unique(0);
+
+	for (auto i = tree.begin(); tree.end() != i; i++) {
+		std::cout << *i << " ";
+	}
 
 //	tools::sequence<int> seq;
 //
@@ -109,13 +93,13 @@ int main() {
 //
 //	std::cout << stack.empty() << std::endl;
 
-	int arr[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-
-	tools::sequence<int> seq(arr, arr + 10);
-
-	for (auto iter = seq.rbegin(); seq.rend() != iter; ++iter) {
-		std::cout << *iter << " ";
-	}
+//	int arr[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+//
+//	tools::sequence<int> seq(arr, arr + 10);
+//
+//	for (auto iter = seq.rbegin(); seq.rend() != iter; ++iter) {
+//		std::cout << *iter << " ";
+//	}
 
 
 //	std::vector<int> vec(arr, arr + 10);
