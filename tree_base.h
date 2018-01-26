@@ -11,31 +11,142 @@
 
 namespace tools {
 
-	struct _bitree_node {
+	struct _bitree_node_base {
 
-		typedef _bitree_node* base_ptr;
+		typedef _bitree_node_base* base_ptr;
 
 		base_ptr parent;
 		base_ptr left;
 		base_ptr right;
 
-		explicit _bitree_node(base_ptr p = nullptr,
-		                      base_ptr l = nullptr,
-		                      base_ptr r = nullptr) :
+		explicit _bitree_node_base(base_ptr p = nullptr,
+		                           base_ptr l = nullptr,
+		                           base_ptr r = nullptr) :
 			parent(p), left(l), right(r) { }
 	};
 
+	template <typename _Val>
+	struct _simple_bitree_node : _bitree_node_base {
+	protected:
+
+		typedef _bitree_node_base          base_type;
+		typedef _simple_bitree_node<_Val>  self_type;
+
+	public:
+		typedef self_type* base_ptr;
+		typedef _Val       value_type;
+
+	public:
+		value_type value;
+
+	public:
+		_simple_bitree_node() = default;
+		_simple_bitree_node(const value_type& val) : value(val) { }
+	};
+
 	struct _bitree_iterator_base {
-		typedef _bitree_node::base_ptr          base_ptr;
+		typedef _bitree_node_base::base_ptr     base_ptr;
 		typedef std::bidirectional_iterator_tag iterator_category;
 		typedef ptrdiff_t                       difference_type;
 
 		base_ptr node;
 
 		explicit _bitree_iterator_base(base_ptr p = nullptr) : node(p) { }
+	};
+
+	/* 默认顺序是L->R */
+	namespace traversal {
+
+		struct preorder  { };
+		struct inorder   { };
+		struct postorder { };
+
+	}
+
+	template <typename _Order>
+	struct _bitree_iterator_impl;
+
+	template <>
+	struct _bitree_iterator_impl<
+		traversal::preorder
+	> : _bitree_iterator_base {
+
+		typedef _bitree_iterator_base base_type;
+
+		explicit _bitree_iterator_impl(base_ptr p = nullptr) :
+			base_type(p) { }
 
 		void increment() {
-			if (nullptr != node->right) {
+			if (nullptr != node->left) {
+				node = node->left;
+			}
+			else if (nullptr != node->right) {
+				node = node->right;
+			}
+			else {
+				base_ptr p = node->parent;
+				while ( nullptr == p->right ||
+					   (node    == p->right &&
+						node    != p->left)) {
+					node = p;
+					p = p->parent;
+				}
+				if (node == p->right) {
+					node = p;
+				}
+				else {
+					node = p->right;
+				}
+			}
+		}
+
+		void decrement() {
+			/* 当树为空，而且 node == header 时引发错误 */
+			base_ptr p = node->parent;
+			if (node == p->right && node != p->left) {
+				if (nullptr != p->left) {
+					p = p->left;
+					while (nullptr != p->right) {
+						p = p->right;
+					}
+				}
+			}
+
+			if (p->parent != node || p->left == node) {
+				node = p;
+			}
+			else {
+				node = node->right;
+			}
+		}
+	};
+
+	template <>
+	struct _bitree_iterator_impl<
+		traversal::inorder
+	> : _bitree_iterator_base {
+
+		typedef _bitree_iterator_base base_type;
+
+		explicit _bitree_iterator_impl(base_ptr p = nullptr) :
+			base_type(p) { }
+
+		void increment() {
+			bool is_header = false;
+			base_ptr p = node->parent;
+			if (node    == p->parent &&
+				nullptr != node->left &&
+				nullptr != p->left) {
+				is_header = (
+					p->left == node->left &&
+					node    != node->left->parent ||
+					nullptr != p->left->left
+				);
+			}
+			if (is_header) {
+				node = node->left;
+			}
+			else if (nullptr != node->right) {
 				node = node->right;
 				while (nullptr != node->left) {
 					node = node->left;
@@ -54,10 +165,23 @@ namespace tools {
 		}
 
 		void decrement() {
-			if (node == node->parent->parent) {
+			/* 当树为空，而且 node == header 时引发错误 */
+			// 分开处理 header 和 root
+
+			bool is_header = false;
+			base_ptr p = node->parent;
+			if (node    == p->parent &&
+				nullptr != node->left &&
+				nullptr != p->left) {
+				is_header = (
+					p->left == node->left &&
+					node    != node->left->parent ||
+					nullptr != p->left->left
+				);
+			}
+			if (is_header) {
 				node = node->right;
 			}
-
 			else if (nullptr != node->left) {
 				base_ptr l = node->left;
 				while (nullptr != l->right) {
@@ -72,7 +196,58 @@ namespace tools {
 					node = p;
 					p = p->parent;
 				}
-				node = p;
+				if (p != node->left && p != node->right) {
+					node = p;
+				}
+			}
+		}
+	};
+
+	template <>
+	struct _bitree_iterator_impl<
+		traversal::postorder
+	> : _bitree_iterator_base {
+
+		typedef _bitree_iterator_base base_type;
+
+		explicit _bitree_iterator_impl(base_ptr p = nullptr) : base_type(p) { }
+
+		void increment() {
+			/* 当树为空，而且 node == header 时引发错误 */
+			base_ptr p = node->parent;
+			if (node == p->left &&
+				node != p->right) {
+				if (nullptr != p->right) {
+					p = p->right;
+				}
+				while (nullptr != p->left) {
+					p = p->left;
+				}
+			}
+			node = p;
+		}
+
+		void decrement() {
+			if (nullptr != node->right) {
+				node = node->right;
+			}
+			else if (nullptr != node->left) {
+				node = node->left;
+			}
+			else {
+				base_ptr p = node->parent;
+				while ( nullptr == p->left ||
+					   (node    == p->left &&
+					    node    != p->right)) {
+					node = p;
+					p = p->parent;
+				}
+				if (node != p->left) {
+					node = p->left;
+				}
+				else {
+					node = p;
+				}
 			}
 		}
 	};
@@ -87,13 +262,14 @@ namespace tools {
 		return !(left == right);
 	}
 
-	template <typename _Node>
-	struct _const_bitree_iterator : _bitree_iterator_base {
+	template <typename _Node, typename _Order>
+	struct _const_bitree_iterator :
+		_bitree_iterator_impl<_Order> {
 	protected:
-		typedef _const_bitree_iterator<_Node> self_type;
-		typedef _bitree_iterator_base         base_type;
-		typedef _Node                         node_type;
-		typedef _Node*                        link_type;
+		typedef _bitree_iterator_impl<_Order>         base_type;
+		typedef _const_bitree_iterator<_Node, _Order> self_type;
+		typedef _Node                                 node_type;
+		typedef _Node*                                link_type;
 
 	public:
 		typedef typename node_type::value_type value_type;
@@ -102,26 +278,27 @@ namespace tools {
 
 	public:
 		_const_bitree_iterator() = default;
-		_const_bitree_iterator(const base_type& other) : _bitree_iterator_base(other.node) { }
+		_const_bitree_iterator(const base_type& other) : base_type(other) { }
 		explicit _const_bitree_iterator(link_type p) : base_type(p) { }
 
-		reference operator*() const { return link_type(node)->value; }
+		reference operator*() const { return link_type(this->node)->value; }
 		pointer operator->() const { return &(operator*()); }
 
-		self_type& operator++() { increment(); return *this; }
-		self_type& operator++(int) { self_type tmp = *this; increment(); return tmp; }
+		self_type& operator++() { this->increment(); return *this; }
+		self_type& operator++(int) { self_type tmp = *this; this->increment(); return tmp; }
 
-		self_type& operator--() { decrement(); return *this; }
-		self_type& operator--(int) { self_type tmp = *this; decrement(); return tmp; }
+		self_type& operator--() { this->decrement(); return *this; }
+		self_type& operator--(int) { self_type tmp = *this; this->decrement(); return tmp; }
 	};
 
-	template <typename _Node>
-	struct _bitree_iterator : _bitree_iterator_base {
+	template <typename _Node, typename _Order>
+	struct _bitree_iterator :
+		_bitree_iterator_impl<_Order> {
 	protected:
-		typedef _bitree_iterator<_Node> self_type;
-		typedef _bitree_iterator_base   base_type;
-		typedef _Node                   node_type;
-		typedef _Node*                  link_type;
+		typedef _bitree_iterator_impl<_Order>   base_type;
+		typedef _bitree_iterator<_Node, _Order> self_type;
+		typedef _Node                           node_type;
+		typedef _Node*                          link_type;
 
 	public:
 		typedef typename node_type::value_type value_type;
@@ -130,52 +307,326 @@ namespace tools {
 
 	public:
 		_bitree_iterator() = default;
-		_bitree_iterator(const self_type& other) : _bitree_iterator_base(other.node) { }
+		_bitree_iterator(const self_type& other) : base_type(other) { }
 		explicit _bitree_iterator(link_type p) : base_type(p) { }
 
-		reference operator*() const { return link_type(node)->value; }
+		reference operator*() const { return link_type(this->node)->value; }
 		pointer operator->() const { return &(operator*()); }
 
-		self_type& operator++() { increment(); return *this; }
-		self_type& operator++(int) { self_type tmp = *this; increment(); return tmp; }
+		self_type& operator++() { this->increment(); return *this; }
+		self_type& operator++(int) { self_type tmp = *this; this->increment(); return tmp; }
 
-		self_type& operator--() { decrement(); return *this; }
-		self_type& operator--(int) { self_type tmp = *this; decrement(); return tmp; }
+		self_type& operator--() { this->decrement(); return *this; }
+		self_type& operator--(int) { self_type tmp = *this; this->decrement(); return tmp; }
 	};
 
 	template <
-		typename _Key,
-		typename _Val,
-		typename _KeyOf,
-		typename _Comparator
+		typename _Node,
+		typename _Order     = traversal::inorder,
+		typename _Allocator = std::allocator<_Node>
 	>
-	struct _bstree_node : _bitree_node {
+	class _bitree_base {
 	protected:
-		typedef _bitree_node                                  base_type;
-		typedef _bstree_node<_Key, _Val, _KeyOf, _Comparator> self_type;
+		typedef _Node      node_type;
+		typedef _Order     order_type;
+		typedef node_type* link_type;
+
+		typedef _bitree_base<_Node, _Order,_Allocator> self_type;
 
 	public:
-		typedef _Key        key_type;
-		typedef _Val        value_type;
-		typedef _Comparator comparator_type;
-		typedef self_type   bst_type;
+		typedef typename node_type::value_type value_type;
+		typedef value_type&                    reference;
+		typedef const value_type&              const_reference;
+		typedef value_type*                    pointer;
+		typedef const value_type*              const_pointer;
+
+		typedef size_t size_type;
+
+		typedef standard_alloc<node_type, _Allocator> allocator_type;
+
+	protected:
+		link_type header;
+		size_type count;
+
+	protected:
+		typedef _bitree_iterator<node_type, order_type>       inner_iterator;
+		typedef _const_bitree_iterator<node_type, order_type> const_inner_iterator;
 
 	public:
-		value_type      value;
+		typedef _iterator_wrapper<inner_iterator, self_type>       iterator;
+		typedef _iterator_wrapper<const_inner_iterator, self_type> const_iterator;
+
+		typedef _reverse_iterator<iterator>       reverse_iterator;
+		typedef _reverse_iterator<const_iterator> const_reverse_iterator;
+
+	protected:
+		link_type get_node() { return allocator_type::allocate(); }
+		void put_node(link_type p) { return allocator_type::deallocate(p); }
+
+		link_type create_node(const value_type& val) {
+			link_type new_node = get_node();
+			construct(new_node, val);
+			return new_node;
+		}
+
+		link_type clone_node(link_type node) { return create_node(node->value); }
+		void destroy_node(link_type node) { destroy(node); put_node(node); }
+
+		link_type& root() const { return (link_type&) header->parent; }
+		link_type& first() const { return (link_type&) header->left; }
+		link_type& last() const { return (link_type&) header->right; }
+
+	private:
+		void _initialize() {
+			header = get_node();
+
+			root()  = nullptr;
+			first() = header;
+			last()  = header;
+		}
+
+		void _clear() {
+			// todo
+		}
+
+		void _create_root_aux(traversal::preorder) { last()->left = header; }
+
+		void _create_root_aux(traversal::inorder) { }
+
+		void _create_root_aux(traversal::postorder) { first()->right = header; }
+
+		void _insert_left_aux(link_type  parent  ,
+		                      link_type  new_node,
+		                      traversal::preorder) {
+			if (parent == last()) {
+				new_node->left = header;
+				last() = new_node;
+			}
+		}
+
+		void _insert_left_aux(link_type  parent  ,
+		                      link_type  new_node,
+		                      traversal::inorder ) {
+			if (parent == first()) { first() = new_node; }
+		}
+
+		void _insert_left_aux(link_type  parent   ,
+		                      link_type  new_node ,
+		                      traversal::postorder) {
+			if (parent == first()) {
+				parent->right = nullptr;
+				new_node->right = header;
+				first() = new_node;
+			}
+			else {
+				link_type p = first();
+				while (header != p && parent != p) {
+					p = (link_type) p->parent;
+				}
+				if (parent == p) {
+					first()->right = nullptr;
+					new_node->right = header;
+					first() = new_node;
+				}
+			}
+		}
+
+		void _insert_right_aux(link_type  parent  ,
+		                       link_type  new_node,
+		                       traversal::preorder) {
+			if (parent == last()) {
+				parent->left = nullptr;
+				new_node->left = header;
+				last() = new_node;
+			}
+			else {
+				link_type p = last();
+				while (header != p && parent != p) {
+					p = (link_type) p->parent;
+				}
+				if (parent == p) {
+					last()->left = nullptr;
+					new_node->left = header;
+					last() = new_node;
+				}
+			}
+		}
+
+		void _insert_right_aux(link_type  parent  ,
+		                       link_type  new_node,
+		                       traversal::inorder ) {
+			if (parent == last()) { last() = new_node; }
+		}
+
+		void _insert_right_aux(link_type  parent   ,
+		                       link_type  new_node ,
+		                       traversal::postorder) {
+			if (parent == first()) {
+				new_node->right = header;
+				first() = new_node;
+			}
+		}
 
 	public:
-		explicit _bstree_node(const value_type& val) : value(val) { }
-		virtual ~_bstree_node() = default;
+		_bitree_base() : count(0) { _initialize(); }
+		~_bitree_base() { _clear(); put_node(header); }
 
 	public:
-		typedef _bitree_iterator<self_type>       iterator;
-		typedef _const_bitree_iterator<self_type> const_iterator;
+		bool empty() const { return 0 == count; }
+		size_type size() const { return count; }
+		size_type max_size() const { return size_type(-1); }
+
+		iterator begin() { return inner_iterator(first()); }
+		const_iterator begin() const { return const_inner_iterator(first()); }
+
+		iterator end() { return inner_iterator(header); }
+		const_iterator end() const { return const_inner_iterator(header); }
+
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
+		std::pair<iterator, bool> create_root(const value_type& val) {
+			bool no_root = empty();
+			if (no_root) {
+				link_type new_node = create_node(val);
+				root() = new_node; first() = new_node; last() = new_node;
+				new_node->parent = header;
+				_create_root_aux(order_type());
+				++count;
+			}
+
+			return std::make_pair<iterator, bool>(
+				inner_iterator(root()), (bool) no_root
+			);
+		}
+
+		std::pair<iterator, bool>
+			insert_left(const_iterator    pos,
+			            const value_type& val) {
+			if (empty() || end() == pos) {
+				return std::make_pair<iterator, bool>(end(), false);
+			}
+
+			link_type parent  = (link_type) pos.base().node;
+			bool no_left =
+				(nullptr == parent->left || header == parent->left);
+
+			if (no_left) {
+				link_type new_node = create_node(val);
+				parent->left = new_node;
+				new_node->parent = parent;
+				_insert_left_aux(parent, new_node, order_type());
+				++count;
+			}
+
+			return std::make_pair<iterator, bool>(
+				inner_iterator((link_type) parent->left), (bool) no_left
+			);
+		}
+
+		std::pair<iterator, bool>
+			insert_right(const_iterator    pos,
+			             const value_type& val) {
+			if (empty() || end() == pos) {
+				return std::make_pair<iterator, bool>(end(), false);
+			}
+
+			link_type parent   = (link_type) pos.base().node;
+			bool no_right =
+				(nullptr == parent->right || header == parent->right);
+
+			if (no_right) {
+				link_type new_node = create_node(val);
+				parent->right = new_node;
+				new_node->parent = parent;
+				_insert_right_aux(parent, new_node, order_type());
+				++count;
+			}
+
+			return std::make_pair<iterator, bool>(
+				inner_iterator((link_type) parent->right), (bool) no_right
+			);
+		}
+
+		iterator erase(const_iterator pos) { }
 	};
 
-	template <>
-	struct _bstree_node<void, void, void, void> {
+	template <typename _Node>
+	using _bstree_iterator =
+		_bitree_iterator<_Node, traversal::inorder>;
 
-		typedef _bitree_node* base_ptr;
+	template <typename _Node>
+	using _const_bstree_iterator =
+		_const_bitree_iterator<_Node, traversal::inorder>;
+
+//	template <typename _Val>
+//	struct _simple_bstree_node : _bitree_node_base {
+//
+//		typedef _bitree_node_base         base_type;
+//		typedef _simple_bstree_node<_Val> self_type;
+//		typedef _Val                      value_type;
+//
+//		value_type      value;
+//
+//		explicit _simple_bstree_node(const value_type& val) : value(val) { }
+//		virtual ~_simple_bstree_node() = default;
+//	};
+
+	template <
+		typename _Node,
+		typename _Key,
+		typename _KeyOf,
+		typename _Comparator,
+		typename _Allocator
+	>
+	class _bstree_base {
+	protected:
+		typedef _Node      node_type;
+		typedef node_type* link_type;
+
+
+	public:
+		typedef _Key                           key_type;
+		typedef typename node_type::value_type value_type;
+		typedef value_type&                    reference;
+		typedef const value_type&              const_reference;
+		typedef value_type*                    pointer;
+		typedef const value_type*              const_pointer;
+
+		link_type   m_header;
+		size_t      m_count;
+		_Comparator m_comp;
+
+	};
+
+
+//	template <>
+//	iterator find(const key_type& key) {
+//		link_type parent  = m_header;
+//		link_type current = root();
+//
+//		auto key_of = _KeyOf();
+//
+//		while (nullptr != current) {
+//			if (!m_comp(key_of(current->value), key)) {
+//				parent = current;
+//				current = static_cast<link_type>(current->left());
+//			}
+//			else {
+//				current = static_cast<link_type>(current->right());
+//			}
+//		}
+//
+//		inner_iterator iter(parent);
+//		return (end() == iter || m_comp(key, key_of(*iter))) ? end() : iter;
+//	}
+
+	typedef struct _simple_bstree_node {
+
+		typedef _bitree_node_base* base_ptr;
 
 		static base_ptr minimum(base_ptr root) {
 			assert(nullptr != root);
@@ -192,10 +643,7 @@ namespace tools {
 			}
 			return root;
 		}
-	};
-
-	typedef _bstree_node<void, void, void, void> bstree_tool;
-
+	} bstree_tool;
 }
 
 #endif //_TREE_BASE_H_

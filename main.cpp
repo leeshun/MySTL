@@ -4,6 +4,7 @@
 #include "single_list.h"
 #include "stack.h"
 #include "heap.h"
+#include "tree_base.h"
 
 #include <algorithm>
 #include <random>
@@ -25,22 +26,55 @@ struct A {
 
 int main() {
 
-	std::mt19937 rand_engine((unsigned int) time(nullptr));
-	std::uniform_int_distribution<int> rand_int(-100, 100);
+//	std::mt19937 rand_engine((unsigned int) time(nullptr));
+//	std::uniform_int_distribution<int> rand_int(-100, 100);
+//
+//	tools::_rb_tree<int, int, tools::self<int>, tools::less<int>> tree;
+//
+//	tree.insert_equal(1);
+//	tree.insert_equal(2);
+//	tree.insert_equal(5);
+//	tree.insert_equal(-3);
+//	tree.insert_equal(-2);
+//
+//	tree.insert_unique(0);
+//
+//	for (auto i = tree.begin(); tree.end() != i; i++) {
+//		std::cout << *i << " ";
+//	}
+//
+//	for (auto i = tree.rbegin(); tree.rend() != i; ++i) {
+//		std::cout << *i << " ";
+//	}
 
-	tools::_rb_tree<int, int, tools::self<int>, tools::less<int>> tree;
+	tools::_bitree_base<
+		tools::_simple_bitree_node<int>,
+		tools::traversal::inorder
+	> tree;
 
-	tree.insert_equal(1);
-	tree.insert_equal(2);
-	tree.insert_equal(5);
-	tree.insert_equal(-3);
-	tree.insert_equal(-2);
+	assert(tree.begin() == tree.end());
 
-	tree.insert_unique(0);
+	auto res1 = tree.create_root(1);
+	assert(res1.second);
 
-	for (auto i = tree.begin(); tree.end() != i; i++) {
-		std::cout << *i << " ";
+	auto res2 = tree.insert_left(res1.first, 2);
+	auto res3 = tree.insert_right(res1.first, 3);
+
+	tree.insert_right(res2.first, 4);
+	tree.insert_right(res3.first, 5);
+
+	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
+		std::cout << *iter << " ";
 	}
+	std::cout << std::endl;
+
+	for (auto iter = tree.rbegin(); tree.rend() != iter; ++iter) {
+		std::cout << *iter << " ";
+	}
+
+	auto i = tree.begin();
+
+	assert(++(--i) == tree.begin());
 
 //	tools::sequence<int> seq;
 //

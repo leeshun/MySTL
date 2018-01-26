@@ -18,8 +18,8 @@ namespace tools {
 		_rb_tree_red, _rb_tree_black
 	};
 
-	struct _rb_tree_node_base : _bitree_node {
-		typedef _bitree_node        base_type;
+	struct _rb_tree_node_base : _bitree_node_base {
+		typedef _bitree_node_base   base_type;
 		typedef _rb_tree_node_base* base_ptr;
 		typedef _rb_tree_color      color_type;
 
@@ -36,9 +36,9 @@ namespace tools {
 		base_ptr& right() const { return (base_ptr&) base_type::right; }
 	};
 
-	inline void _rb_tree_left_rotate(_bitree_node*  shaft,
-	                                 _bitree_node*& root ) {
-		_bitree_node* right = shaft->right;
+	inline void _rb_tree_left_rotate(_bitree_node_base*  shaft,
+	                                 _bitree_node_base*& root ) {
+		_bitree_node_base* right = shaft->right;
 		shaft->right = right->left;
 		if (nullptr != right->left) {
 			right->left->parent = shaft;
@@ -59,9 +59,9 @@ namespace tools {
 		shaft->parent = right;
 	}
 
-	inline void _rb_tree_right_rotate(_bitree_node*  shaft,
-	                                  _bitree_node*& root ) {
-		_bitree_node* left = shaft->left;
+	inline void _rb_tree_right_rotate(_bitree_node_base*  shaft,
+	                                  _bitree_node_base*& root ) {
+		_bitree_node_base* left = shaft->left;
 		shaft->left = left->right;
 		if (nullptr != left->right) {
 			left->right->parent = shaft;
@@ -97,11 +97,11 @@ namespace tools {
 				else {
 					if (new_node->parent()->right() == new_node) {
 						new_node = new_node->parent();
-						_rb_tree_left_rotate(new_node, (_bitree_node*&) root);
+						_rb_tree_left_rotate(new_node, (_bitree_node_base*&) root);
 					}
 					new_node->parent()->color = _rb_tree_black;
 					new_node->parent()->parent()->color = _rb_tree_red;
-					_rb_tree_right_rotate(new_node->parent()->parent(), (_bitree_node*&) root);
+					_rb_tree_right_rotate(new_node->parent()->parent(), (_bitree_node_base*&) root);
 				}
 			}
 			else {
@@ -115,11 +115,11 @@ namespace tools {
 				else {
 					if (new_node->parent()->left() == new_node) {
 						new_node = new_node->parent();
-						_rb_tree_right_rotate(new_node, (_bitree_node*&) root);
+						_rb_tree_right_rotate(new_node, (_bitree_node_base*&) root);
 					}
 					new_node->parent()->color = _rb_tree_black;
 					new_node->parent()->parent()->color = _rb_tree_red;
-					_rb_tree_left_rotate(new_node->parent()->parent(), (_bitree_node*&) root);
+					_rb_tree_left_rotate(new_node->parent()->parent(), (_bitree_node_base*&) root);
 				}
 			}
 		}
@@ -360,18 +360,19 @@ namespace tools {
 			put_node(node);
 		}
 
-	protected:
-		size_type       m_count_node;
+	private:
+		size_type       m_count;
 		link_type       m_header; /* virtual header */
 		comparator_type m_comp;
 
+	protected:
 		link_type& root()      const { return (link_type&) m_header->parent(); }
 		link_type& leftmost()  const { return (link_type&) m_header->left()  ; }
 		link_type& rightmost() const { return (link_type&) m_header->right() ; }
 
 	protected:
-		typedef _bitree_iterator<node_type>       inner_iterator;
-		typedef _const_bitree_iterator<node_type> const_inner_iterator;
+		typedef _bstree_iterator<node_type>       inner_iterator;
+		typedef _const_bstree_iterator<node_type> const_inner_iterator;
 
 	public:
 		typedef _iterator_wrapper<inner_iterator, self_type>       iterator;
@@ -425,13 +426,13 @@ namespace tools {
 			_rb_tree_insert_rebalance(
 				new_node, reinterpret_cast<_rb_tree_node_base*&>(root())
 			);
-			++m_count_node;
+			++m_count;
 			return inner_iterator(new_node);
 		}
 
 	public:
 		explicit _rb_tree(const comparator_type& comp = _Comparator()) :
-			m_count_node(0), m_comp(comp) { _initialize(); }
+			m_count(0), m_comp(comp) { _initialize(); }
 
 		~_rb_tree() {
 			_clear();
@@ -452,14 +453,14 @@ namespace tools {
 		iterator end() { return inner_iterator(m_header); }
 		const_iterator end() const { return const_inner_iterator(m_header); }
 
-		reverse_iterator rbegin() { return end(); }
-		const_reverse_iterator rbegin() const { return end(); }
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
 
-		reverse_iterator rend() { return begin(); }
-		const_reverse_iterator rend() const { return begin(); }
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 
-		bool empty() const { return 0 == m_count_node; }
-		size_type size() const { return m_count_node; }
+		bool empty() const { return 0 == m_count; }
+		size_type size() const { return m_count; }
 		size_type max_size() const { return size_type(-1); }
 
 		const_iterator minimum() const {
