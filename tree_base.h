@@ -215,16 +215,24 @@ namespace tools {
 		void increment() {
 			/* 当树为空，而且 node == header 时引发错误 */
 			base_ptr p = node->parent;
-			if (node == p->left &&
-				node != p->right) {
-				if (nullptr != p->right) {
+			if (node == p->left && node != p->right) {
+				while (nullptr != p->right) {
 					p = p->right;
+					if (nullptr != p->left) {
+						break;
+					}
 				}
 				while (nullptr != p->left) {
 					p = p->left;
 				}
 			}
-			node = p;
+
+			if (p->parent != node || p->right == node) {
+				node = p;
+			}
+			else {
+				node = node->left;
+			}
 		}
 
 		void decrement() {

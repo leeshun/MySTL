@@ -49,7 +49,7 @@ int main() {
 
 	tools::_bitree_base<
 		tools::_simple_bitree_node<int>,
-		tools::traversal::inorder
+		tools::traversal::postorder
 	> tree;
 
 	assert(tree.begin() == tree.end());
@@ -57,11 +57,11 @@ int main() {
 	auto res1 = tree.create_root(1);
 	assert(res1.second);
 
-	auto res2 = tree.insert_left(res1.first, 2);
-	auto res3 = tree.insert_right(res1.first, 3);
-
-	tree.insert_right(res2.first, 4);
-	tree.insert_right(res3.first, 5);
+//	auto res2 = tree.insert_left(res1.first, 2);
+//	auto res3 = tree.insert_right(res1.first, 3);
+//
+//	tree.insert_right(res2.first, 4);
+//	tree.insert_right(res3.first, 5);
 
 	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
 		std::cout << *iter << " ";
