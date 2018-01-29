@@ -394,7 +394,10 @@ namespace tools {
 		}
 
 		void _clear() {
-			// todo
+			if (empty()) {
+				return;
+			}
+			_erase(root());
 		}
 
 		void _create_root_aux(traversal::preorder) { last()->left = header; }
@@ -473,6 +476,73 @@ namespace tools {
 				new_node->right = header;
 				first() = new_node;
 			}
+		}
+
+		void _locate_boundary() {
+			if (nullptr == root()) {
+				first() = header;
+				last()  = header;
+				return;
+			}
+
+			_locate_boundary_aux(order_type());
+		}
+
+		void _locate_boundary_aux(traversal::preorder) {
+			link_type p = root();
+			while (nullptr != p->left || nullptr != p->right) {
+				p = (link_type) (nullptr != p->right ? p->right : p->left);
+			}
+			last() = p;
+		}
+
+		void _locate_boundary_aux(traversal::inorder) {
+			link_type p = root();
+			link_type q = root();
+			while (nullptr != p->left) {
+				p = (link_type) p->left;
+			}
+			while (nullptr != q->right) {
+				q = (link_type) q->right;
+			}
+			first() = p; last() = q;
+		}
+
+		void _locate_boundary_aux(traversal::postorder) {
+			link_type p = root();
+			while (nullptr != p->left || nullptr != p->right) {
+				p = (link_type) (nullptr != p->left ? p->left : p->right);
+			}
+			first() = p;
+		}
+
+		size_type _remove_tree(link_type root) {
+			if (nullptr == root || header == root) { return 0; }
+
+			size_type num_of_left  = _remove_tree((link_type) root->left );
+			size_type num_of_right = _remove_tree((link_type) root->right);
+
+			link_type parent = (link_type) root->parent;
+			if (header == parent) {
+				parent->parent = nullptr;
+			}
+			else if (parent->left == root) {
+				parent->left = nullptr;
+			}
+			else {
+				parent->right = nullptr;
+			}
+
+			destroy_node(root);
+			return 1 + num_of_left + num_of_right;
+		}
+
+		/* root 非空 */
+		link_type _erase(link_type root) {
+			link_type parent = (link_type) root->parent;
+			count -= _remove_tree(root);
+			_locate_boundary();
+			return parent;
 		}
 
 	public:
@@ -559,7 +629,14 @@ namespace tools {
 			);
 		}
 
-		iterator erase(const_iterator pos) { }
+		iterator erase(const_iterator pos) {
+			if (empty() || end() == pos || const_iterator() == pos) {
+				throw std::overflow_error("Invalid iterator or empty tree.");
+			}
+
+			link_type parent = _erase((link_type) pos.base().node);
+			return inner_iterator(parent);
+		}
 	};
 
 	template <typename _Node>
