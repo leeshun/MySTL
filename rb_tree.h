@@ -468,7 +468,7 @@ namespace tools {
 				return end();
 			}
 			return const_inner_iterator(
-				(link_type) bstree_tool::minimum(root())
+				(link_type) _bstree_tool::minimum(root())
 			);
 		}
 
@@ -478,7 +478,7 @@ namespace tools {
 			}
 
 			return const_inner_iterator(
-				(link_type) bstree_tool::maximum(root())
+				(link_type) _bstree_tool::maximum(root())
 			);
 		}
 

@@ -49,7 +49,7 @@ int main() {
 
 	tools::_bitree_base<
 		tools::_simple_bitree_node<int>,
-		tools::traversal::preorder
+		tools::traversal::postorder
 	> tree;
 
 	assert(tree.begin() == tree.end());
@@ -76,12 +76,16 @@ int main() {
 
 	assert(++(--i) == tree.begin());
 
-	tree.erase(res3.first);
+	tree.erase(res1.first);
 
 	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
 		std::cout << *iter << " ";
 	}
 	std::cout << std::endl;
+
+	for (auto iter = tree.rbegin(); tree.rend() != iter; ++iter) {
+		std::cout << *iter << " ";
+	}
 
 //	tools::sequence<int> seq;
 //

@@ -218,12 +218,9 @@ namespace tools {
 			if (node == p->left && node != p->right) {
 				while (nullptr != p->right) {
 					p = p->right;
-					if (nullptr != p->left) {
-						break;
+					while (nullptr != p->left) {
+						p = p->left;
 					}
-				}
-				while (nullptr != p->left) {
-					p = p->left;
 				}
 			}
 
@@ -400,6 +397,18 @@ namespace tools {
 			_erase(root());
 		}
 
+		bool _has_left(link_type p) const {
+			return (nullptr != p->left && header != p->left);
+		}
+
+		bool _has_right(link_type p) const {
+			return (nullptr != p->right && header != p->right);
+		}
+
+		bool _leaf(link_type p) const {
+			return !_has_left(p) && !_has_right(p);
+		}
+
 		void _create_root_aux(traversal::preorder) { last()->left = header; }
 
 		void _create_root_aux(traversal::inorder) { }
@@ -490,10 +499,11 @@ namespace tools {
 
 		void _locate_boundary_aux(traversal::preorder) {
 			link_type p = root();
-			while (nullptr != p->left || nullptr != p->right) {
+			while (!_leaf(p)) {
 				p = (link_type) (nullptr != p->right ? p->right : p->left);
 			}
 			last() = p;
+			p->left = header;
 		}
 
 		void _locate_boundary_aux(traversal::inorder) {
@@ -510,10 +520,11 @@ namespace tools {
 
 		void _locate_boundary_aux(traversal::postorder) {
 			link_type p = root();
-			while (nullptr != p->left || nullptr != p->right) {
+			while (!_leaf(p)) {
 				p = (link_type) (nullptr != p->left ? p->left : p->right);
 			}
 			first() = p;
+			p->right = header;
 		}
 
 		size_type _remove_tree(link_type root) {
@@ -565,6 +576,10 @@ namespace tools {
 
 		reverse_iterator rend() { return reverse_iterator(begin()); }
 		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
+		bool leaf(const_iterator pos) const {
+			return _leaf(pos.base().node);
+		}
 
 		std::pair<iterator, bool> create_root(const value_type& val) {
 			bool no_root = empty();
@@ -647,31 +662,45 @@ namespace tools {
 	using _const_bstree_iterator =
 		_const_bitree_iterator<_Node, traversal::inorder>;
 
-//	template <typename _Val>
-//	struct _simple_bstree_node : _bitree_node_base {
-//
-//		typedef _bitree_node_base         base_type;
-//		typedef _simple_bstree_node<_Val> self_type;
-//		typedef _Val                      value_type;
-//
-//		value_type      value;
-//
-//		explicit _simple_bstree_node(const value_type& val) : value(val) { }
-//		virtual ~_simple_bstree_node() = default;
-//	};
+	template <
+		typename _Key,
+		typename _Val,
+		typename _KeyOf,
+		typename _Comparator
+	>
+	struct _simple_bstree_node : _simple_bitree_node<_Val> {
+
+		typedef _bitree_node_base base_type;
+		typedef _Val              value_type;
+		typedef _Key              key_type;
+		typedef _Comparator       comparator_type;
+
+		typedef _simple_bstree_node<_Key, _Val, _KeyOf, _Comparator> self_type;
+
+		value_type      value;
+
+		explicit _simple_bstree_node(const value_type& val) : value(val) { }
+		virtual ~_simple_bstree_node() = default;
+
+		key_type get_key() const { return _KeyOf()(value); }
+	};
 
 	template <
 		typename _Node,
 		typename _Key,
 		typename _KeyOf,
-		typename _Comparator,
-		typename _Allocator
+		typename _Comparator = less<_Key>,
+		typename _Allocator  = std::allocator<_Node>
 	>
-	class _bstree_base {
+	class _bstree_base :
+		public _bitree_base<_Node, traversal::inorder, _Allocator> {
 	protected:
-		typedef _Node      node_type;
-		typedef node_type* link_type;
-
+		typedef _bitree_base<_Node, traversal::inorder, _Allocator>        base_type;
+		typedef _bstree_base<_Node, _Key, _KeyOf, _Comparator, _Allocator> self_type;
+		typedef typename base_type::node_type                              node_type;
+		typedef typename base_type::link_type                              link_type;
+		typedef typename base_type::order_type                             order_type;
+		typedef typename node_type::comparator_type                        comparator_type;
 
 	public:
 		typedef _Key                           key_type;
@@ -680,36 +709,70 @@ namespace tools {
 		typedef const value_type&              const_reference;
 		typedef value_type*                    pointer;
 		typedef const value_type*              const_pointer;
+		typedef typename base_type::size_type  size_type;
 
-		link_type   m_header;
-		size_t      m_count;
-		_Comparator m_comp;
+	protected:
+		comparator_type comparator;
 
+	public:
+		explicit _bstree_base(const comparator_type& comp = _Comparator()) :
+			comparator(comp) { }
+
+	protected:
+		typedef typename base_type::inner_iterator       inner_iterator;
+		typedef typename base_type::const_inner_iterator const_inner_iterator;
+
+	public:
+		typedef typename base_type::iterator       iterator;
+		typedef typename base_type::const_iterator const_iterator;
+
+	public:
+		iterator find(const key_type& key) {
+			link_type parent  = base_type::header;
+			link_type current = root();
+
+			auto key_of = _KeyOf();
+
+			while (nullptr != current) {
+				if (!comparator(key_of(current->value), key)) {
+					parent = current;
+					current = (link_type) current->left();
+				}
+				else {
+					current = (link_type) current->right();
+				}
+			}
+
+			inner_iterator iter(parent);
+			return (end() == iter || comparator(key, key_of(*iter))) ? end() : iter;
+		}
+
+		iterator insert_equal(const value_type& val) {
+			if (this->empty()) {
+				return this->create_root(val).first;
+			}
+
+			link_type parent = base_type::header;
+			link_type current = root();
+			auto key_of = _KeyOf();
+
+			while (nullptr != current) {
+				parent = current;
+				current = static_cast<link_type>(
+					comparator(key_of(val), key_of(current->value)) ? current->left() : current->right()
+				);
+			}
+
+			// todo
+		}
+
+		iterator insert_unique(const value_type& val) {
+
+		}
 	};
 
-
-//	template <>
-//	iterator find(const key_type& key) {
-//		link_type parent  = m_header;
-//		link_type current = root();
-//
-//		auto key_of = _KeyOf();
-//
-//		while (nullptr != current) {
-//			if (!m_comp(key_of(current->value), key)) {
-//				parent = current;
-//				current = static_cast<link_type>(current->left());
-//			}
-//			else {
-//				current = static_cast<link_type>(current->right());
-//			}
-//		}
-//
-//		inner_iterator iter(parent);
-//		return (end() == iter || m_comp(key, key_of(*iter))) ? end() : iter;
-//	}
-
-	typedef struct _simple_bstree_node {
+	template <>
+	typedef class _bstree_base<void, void, void, void, void> {
 
 		typedef _bitree_node_base* base_ptr;
 
@@ -728,7 +791,7 @@ namespace tools {
 			}
 			return root;
 		}
-	} bstree_tool;
+	} _bstree_tool;
 }
 
 #endif //_TREE_BASE_H_
