@@ -627,7 +627,7 @@ namespace tools {
 				return std::make_pair<iterator, bool>(end(), false);
 			}
 
-			link_type parent   = (link_type) pos.base().node;
+			link_type parent = (link_type) pos.base().node;
 			bool no_right =
 				(nullptr == parent->right || header == parent->right);
 
@@ -644,7 +644,7 @@ namespace tools {
 			);
 		}
 
-		iterator erase(const_iterator pos) {
+		iterator erase_all(const_iterator pos) {
 			if (empty() || end() == pos || const_iterator() == pos) {
 				throw std::overflow_error("Invalid iterator or empty tree.");
 			}
@@ -700,7 +700,7 @@ namespace tools {
 		typedef typename base_type::node_type                              node_type;
 		typedef typename base_type::link_type                              link_type;
 		typedef typename base_type::order_type                             order_type;
-		typedef typename node_type::comparator_type                        comparator_type;
+		typedef _Comparator                                                comparator_type;
 
 	public:
 		typedef _Key                           key_type;
@@ -714,6 +714,11 @@ namespace tools {
 	protected:
 		comparator_type comparator;
 
+	protected:
+		link_type& root() const { return base_type::root(); }
+		link_type& first() const { return base_type::first(); }
+		link_type& last() const { return base_type::last(); }
+
 	public:
 		explicit _bstree_base(const comparator_type& comp = _Comparator()) :
 			comparator(comp) { }
@@ -725,6 +730,50 @@ namespace tools {
 	public:
 		typedef typename base_type::iterator       iterator;
 		typedef typename base_type::const_iterator const_iterator;
+
+	private:
+
+		link_type _insert(link_type         current,
+		                  link_type         parent ,
+		                  const value_type& val    ) {
+			assert(nullptr == current);
+
+			auto key_of = _KeyOf();
+			link_type new_node = nullptr;
+
+			if (comparator(key_of(val), key_of(parent->value))) {
+				new_node = base_type::create_node(val);
+				parent->left = new_node;
+
+				if (parent == first()) {
+					first() = new_node;
+				}
+			}
+			else {
+				new_node = base_type::create_node(val);
+				parent->right = new_node;
+				if (parent == last()) {
+					last() = new_node;
+				}
+			}
+			new_node->parent = parent;
+			++base_type::count;
+
+			return new_node;
+		}
+
+	private:
+		std::pair<iterator, bool> create_root(const value_type& val) = delete;
+
+		std::pair<iterator, bool>
+			insert_left(const_iterator    pos,
+		                const value_type& val) = delete;
+
+		std::pair<iterator, bool>
+			insert_right(const_iterator    pos,
+		                 const value_type& val) = delete;
+
+		iterator erase_all(const_iterator pos) = delete;
 
 	public:
 		iterator find(const key_type& key) {
@@ -743,13 +792,13 @@ namespace tools {
 				}
 			}
 
-			inner_iterator iter(parent);
-			return (end() == iter || comparator(key, key_of(*iter))) ? end() : iter;
+			return (base_type::header == parent || comparator(key, key_of(parent->value))) ?
+			            base_type::end() : iterator(inner_iterator(parent));
 		}
 
 		iterator insert_equal(const value_type& val) {
 			if (this->empty()) {
-				return this->create_root(val).first;
+				return base_type::create_root(val).first;
 			}
 
 			link_type parent = base_type::header;
@@ -759,21 +808,62 @@ namespace tools {
 			while (nullptr != current) {
 				parent = current;
 				current = static_cast<link_type>(
-					comparator(key_of(val), key_of(current->value)) ? current->left() : current->right()
+					comparator(key_of(val), key_of(current->value)) ?
+						current->left : current->right
 				);
 			}
 
-			// todo
+			return inner_iterator(_insert(current, parent, val));
 		}
 
-		iterator insert_unique(const value_type& val) {
+		std::pair<iterator, bool> insert_unique(const value_type& val) {
+			if (this->empty()) {
+				return std::make_pair<iterator, bool>(
+					base_type::create_root(val).first, true
+				);
+			}
 
+			link_type parent = base_type::header;
+			link_type current = root();
+			bool prior_to = true;
+			auto key_of = _KeyOf();
+
+			while (nullptr != current) {
+				parent = current;
+				prior_to = comparator(key_of(val), key_of(current->value));
+				current = static_cast<link_type>(
+					prior_to ? current->left : current->right
+				);
+			}
+
+			assert(nullptr == current);
+
+			inner_iterator iter(parent);
+			if (prior_to) {
+				if (first() == parent) {
+					return std::pair<iterator, bool>(
+						_insert(current, parent, val), true
+					);
+				}
+				--iter;
+			}
+
+			if (comparator(key_of(parent->value), key_of(val))) {
+				return std::pair<iterator, bool>(
+					_insert(current, parent, val), true
+				);
+			}
+
+			return std::pair<iterator, bool>(iterator(iter), false);
+		}
+
+		iterator erase(const_iterator pos) {
+			// todo
 		}
 	};
 
-	template <>
-	typedef class _bstree_base<void, void, void, void, void> {
-
+	class _bstree_tool {
+	public:
 		typedef _bitree_node_base* base_ptr;
 
 		static base_ptr minimum(base_ptr root) {
@@ -791,7 +881,7 @@ namespace tools {
 			}
 			return root;
 		}
-	} _bstree_tool;
+	};
 }
 
 #endif //_TREE_BASE_H_

@@ -47,45 +47,77 @@ int main() {
 //		std::cout << *i << " ";
 //	}
 
-	tools::_bitree_base<
-		tools::_simple_bitree_node<int>,
-		tools::traversal::postorder
+//	tools::_bitree_base<
+//		tools::_simple_bitree_node<int>,
+//		tools::traversal::postorder
+//	> tree;
+//
+//	assert(tree.begin() == tree.end());
+//
+//	auto res1 = tree.create_root(1);
+//	assert(res1.second);
+//
+//	auto res2 = tree.insert_left(res1.first, 2);
+//	auto res3 = tree.insert_right(res1.first, 3);
+//
+//	tree.insert_right(res2.first, 4);
+//	tree.insert_right(res3.first, 5);
+//
+//	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
+//		std::cout << *iter << " ";
+//	}
+//	std::cout << std::endl;
+//
+//	for (auto iter = tree.rbegin(); tree.rend() != iter; ++iter) {
+//		std::cout << *iter << " ";
+//	}
+//
+//	auto i = tree.begin();
+//
+//	assert(++(--i) == tree.begin());
+//
+//	tree.erase(res1.first);
+//
+//	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
+//		std::cout << *iter << " ";
+//	}
+//	std::cout << std::endl;
+//
+//	for (auto iter = tree.rbegin(); tree.rend() != iter; ++iter) {
+//		std::cout << *iter << " ";
+//	}
+
+	tools::_bstree_base<
+		tools::_simple_bitree_node<int>, int, tools::self<int>, tools::less<int>
 	> tree;
 
-	assert(tree.begin() == tree.end());
+	assert(tree.empty());
 
-	auto res1 = tree.create_root(1);
-	assert(res1.second);
+	std::cout << "size: " << tree.size() << std::endl;
 
-	auto res2 = tree.insert_left(res1.first, 2);
-	auto res3 = tree.insert_right(res1.first, 3);
+	tree.insert_equal(5);
 
-	tree.insert_right(res2.first, 4);
-	tree.insert_right(res3.first, 5);
+	std::cout << "size: " << tree.size() << std::endl;
+	tree.insert_equal(3);
+
+	std::cout << "size: " << tree.size() << std::endl;
+	tree.insert_equal(0);
+
+	std::cout << "size: " << tree.size() << std::endl;
+	tree.insert_equal(6);
+
+	std::cout << "size: " << tree.size() << std::endl;
+	tree.insert_equal(5);
 
 	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
 		std::cout << *iter << " ";
 	}
-	std::cout << std::endl;
 
 	for (auto iter = tree.rbegin(); tree.rend() != iter; ++iter) {
 		std::cout << *iter << " ";
 	}
 
-	auto i = tree.begin();
-
-	assert(++(--i) == tree.begin());
-
-	tree.erase(res1.first);
-
-	for (auto iter = tree.begin(); tree.end() != iter; ++iter) {
-		std::cout << *iter << " ";
-	}
-	std::cout << std::endl;
-
-	for (auto iter = tree.rbegin(); tree.rend() != iter; ++iter) {
-		std::cout << *iter << " ";
-	}
+	std::cout << "size: " << tree.size() << std::endl;
 
 //	tools::sequence<int> seq;
 //
