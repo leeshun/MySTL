@@ -81,7 +81,7 @@ namespace tools {
 			return *this;
 		}
 
-		self_type& operator++(int) {
+		const self_type operator++(int) {
 			self_type tmp = *this;
 			increment();
 			return tmp;
@@ -114,7 +114,7 @@ namespace tools {
 			return *this;
 		}
 
-		self_type& operator++(int) {
+		const self_type operator++(int) {
 			self_type tmp = *this;
 			increment();
 			return tmp;
